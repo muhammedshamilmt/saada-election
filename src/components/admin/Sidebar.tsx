@@ -14,6 +14,8 @@ import {
   Vote,
   Sparkles,
   ChevronRight,
+  ChevronLeft,
+  X,
   LogOut,
 } from "lucide-react";
 
@@ -26,6 +28,10 @@ interface SidebarProps {
   totalVoters: number;
   pendingVotesCount: number;
   isLive: boolean;
+  isOpen: boolean;
+  onClose: () => void;
+  onToggle: () => void;
+  postCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,6 +41,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   totalVoters,
   pendingVotesCount,
   isLive,
+  isOpen,
+  onClose,
+  onToggle,
+  postCount,
 }) => {
   const handleLogout = async () => {
     try {
@@ -45,35 +55,66 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const handleTabClick = (tab: AdminTab) => {
+    onSelectTab(tab);
+    // Auto-hide in mobile screen when tab selected
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className="w-72 bg-white border-r border-zinc-200/90 flex flex-col justify-between h-screen sticky top-0 shrink-0 select-none shadow-none">
-      {/* Top Header & Org Selector */}
-      <div className="p-5 pb-3">
-        {/* Brand logo & collapse toggle */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#FF5B26] text-white flex items-center justify-center font-black border border-[#FF5B26]">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-[17px] tracking-tight text-zinc-900 font-sans">
-                  Saada<span className="text-[#FF5B26]">Admin</span>
-                </span>
-                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-[#FF5B26]/10 text-[#FF5B26] uppercase border border-[#FF5B26]/20">
-                  v2.6
-                </span>
+    <>
+      {/* Mobile backdrop overlay */}
+      <div
+        className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300 ${
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Dynamic Collapsible Sidebar */}
+      <aside
+        className={`fixed top-0 bottom-0 left-0 z-50 bg-white border-r border-zinc-200/90 h-screen select-none shadow-2xl lg:shadow-none transition-all duration-300 ease-in-out shrink-0 ${
+          isOpen
+            ? "w-72 translate-x-0 lg:static lg:w-72 lg:translate-x-0"
+            : "w-72 -translate-x-full lg:w-0 lg:border-r-0 lg:overflow-hidden lg:-translate-x-full pointer-events-none lg:pointer-events-auto"
+        }`}
+      >
+        <div className="w-72 flex flex-col justify-between h-full overflow-hidden">
+          {/* Top Header & Org Selector */}
+          <div className="p-5 pb-3">
+            {/* Brand logo & collapse toggle */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#FF5B26] text-white flex items-center justify-center font-black border border-[#FF5B26]">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-[17px] tracking-tight text-zinc-900 font-sans">
+                      Saada<span className="text-[#FF5B26]">Admin</span>
+                    </span>
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-[#FF5B26]/10 text-[#FF5B26] uppercase border border-[#FF5B26]/20">
+                      v2.6
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 font-medium">Central Election Bureau</p>
+                </div>
               </div>
-              <p className="text-[11px] text-zinc-400 font-medium">Central Election Bureau</p>
+
+              {/* Close on mobile / Collapse on desktop */}
+              <button
+                type="button"
+                onClick={onClose}
+                title="Hide / Collapse Sidebar"
+                className="w-8 h-8 rounded-lg border border-zinc-200/80 flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4 lg:hidden" />
+                <ChevronLeft className="w-4 h-4 hidden lg:block" />
+              </button>
             </div>
-          </div>
-          <button
-            title="Collapse Sidebar"
-            className="w-7 h-7 rounded-lg border border-zinc-200/80 flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4 rotate-180" />
-          </button>
-        </div>
 
         {/* Election Session Pill Selector */}
         <div className="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200/90 bg-zinc-50/70 hover:bg-zinc-100/70 hover:border-zinc-300 transition-all cursor-pointer group">
@@ -122,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="space-y-1">
             {/* Dashboard / Overview */}
             <button
-              onClick={() => onSelectTab("dashboard")}
+              onClick={() => handleTabClick("dashboard")}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 currentTab === "dashboard"
                   ? "bg-zinc-900 text-white"
@@ -141,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Candidates */}
             <button
-              onClick={() => onSelectTab("candidates")}
+              onClick={() => handleTabClick("candidates")}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 currentTab === "candidates"
                   ? "bg-zinc-900 text-white"
@@ -169,7 +210,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Voters */}
             <button
-              onClick={() => onSelectTab("voters")}
+              onClick={() => handleTabClick("voters")}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 currentTab === "voters"
                   ? "bg-zinc-900 text-white"
@@ -197,7 +238,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {/* Live Results */}
             <button
-              onClick={() => onSelectTab("results")}
+              onClick={() => handleTabClick("results")}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 currentTab === "results"
                   ? "bg-zinc-900 text-white"
@@ -223,6 +264,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Link to Student Voting Booth */}
             <Link
               href="/vote"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                  onClose();
+                }
+              }}
               className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-orange-50/60 transition-all cursor-pointer group"
             >
               <div className="flex items-center gap-3">
@@ -230,7 +276,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="font-semibold text-zinc-800">Student Voting Booth</span>
               </div>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-[#FF5B26] border border-orange-200/60">
-                3 Roles
+                {postCount ? `${postCount} Post${postCount === 1 ? "" : "s"}` : "Live Booth"}
               </span>
             </Link>
           </div>
@@ -243,7 +289,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </p>
           <div className="space-y-1">
             <button
-              onClick={() => onSelectTab("settings")}
+              onClick={() => handleTabClick("settings")}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                 currentTab === "settings"
                   ? "bg-zinc-900 text-white"
@@ -319,7 +365,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="flex items-center justify-between pt-1 px-1">
           <button
-            onClick={() => onSelectTab("settings")}
+            onClick={() => handleTabClick("settings")}
             className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 transition-colors cursor-pointer"
           >
             <Settings className="w-3.5 h-3.5" />
@@ -335,6 +381,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
       </div>
-    </aside>
+        </div>
+      </aside>
+    </>
   );
 };

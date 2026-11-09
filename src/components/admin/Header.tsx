@@ -6,6 +6,7 @@ import {
   SlidersHorizontal,
   Plus,
   Clock,
+  Menu,
 } from "lucide-react";
 import { AdminTab } from "./Sidebar";
 
@@ -13,12 +14,16 @@ interface HeaderProps {
   currentTab: AdminTab;
   onOpenAddModal: () => void;
   status: "live" | "paused" | "closed";
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentTab,
   onOpenAddModal,
   status,
+  onToggleSidebar,
+  isSidebarOpen,
 }) => {
   const getTabActionLabel = () => {
     switch (currentTab) {
@@ -61,20 +66,33 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="px-8 py-6 bg-white border-b border-zinc-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      {/* Title & Subtitle */}
-      <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 font-sans">
-            Welcome Back, Presiding Officer
-          </h1>
-          {getStatusBadge()}
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          <Clock className="w-3.5 h-3.5 text-zinc-400" />
-          <p className="text-xs text-zinc-500">
-            Last synchronized 25 seconds ago &bull; Central Campus Booth #1
-          </p>
+    <header className="px-4 sm:px-8 py-4 sm:py-6 bg-white border-b border-zinc-200/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Title & Subtitle with Sidebar Toggle Button */}
+      <div className="flex items-center gap-3">
+        {onToggleSidebar && (
+          <button
+            type="button"
+            onClick={onToggleSidebar}
+            title={isSidebarOpen ? "Collapse navigation sidebar" : "Open navigation sidebar"}
+            className="p-2.5 rounded-xl border border-zinc-200 bg-white text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer shrink-0"
+            aria-label="Toggle navigation sidebar"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        )}
+        <div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 font-sans">
+              Welcome Back, Presiding Officer
+            </h1>
+            {getStatusBadge()}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+            <p className="text-xs text-zinc-500">
+              Realtime Synced &bull; Central Campus Booth #1
+            </p>
+          </div>
         </div>
       </div>
 

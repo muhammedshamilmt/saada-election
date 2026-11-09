@@ -43,6 +43,26 @@ export const AdminLayout: React.FC = () => {
   const [isAddVoterOpen, setIsAddVoterOpen] = useState(false);
   const [isImportVotersOpen, setIsImportVotersOpen] = useState(false);
 
+  // Dynamic responsive sidebar state (starts open on desktop >= 1024px, auto-hidden on mobile < 1024px)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsSidebarOpen(window.innerWidth >= 1024);
+
+      const handleResize = () => {
+        if (window.innerWidth < 1024) {
+          setIsSidebarOpen(false);
+        } else {
+          setIsSidebarOpen(true);
+        }
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
+
   // Sync with Supabase on mount, listen to Realtime changes, and background refetch
   useEffect(() => {
     let isMounted = true;
@@ -187,6 +207,7 @@ export const AdminLayout: React.FC = () => {
   };
 
   const pendingVotesCount = voters.filter((v) => !v.hasVoted).length;
+  const postCount = new Set(candidates.map((c) => c.post).filter(Boolean)).size;
 
   const handleHeaderAction = () => {
     if (currentTab === "voters") {
@@ -197,8 +218,8 @@ export const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex text-zinc-900 font-sans antialiased">
-      {/* Sleek Admin Left Sidebar */}
+    <div className="min-h-screen bg-[#F8F9FA] flex text-zinc-900 font-sans antialiased overflow-x-hidden">
+      {/* Dynamic Collapsible Admin Sidebar */}
       <Sidebar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -206,17 +227,23 @@ export const AdminLayout: React.FC = () => {
         totalVoters={voters.length}
         pendingVotesCount={pendingVotesCount}
         isLive={config.status === "live"}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onToggle={() => setIsSidebarOpen((prev) => !prev)}
+        postCount={postCount}
       />
 
       {/* Main Administrative Work Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <Header
           currentTab={currentTab}
           onOpenAddModal={handleHeaderAction}
           status={config.status}
+          onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
+          isSidebarOpen={isSidebarOpen}
         />
 
-        <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
           {currentTab === "dashboard" && (
             <DashboardView
               candidates={candidates}
