@@ -556,9 +556,9 @@ export const VotingBooth: React.FC = () => {
                             <img
                               src={candidate.avatarUrl}
                               alt={candidate.name}
-                              className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-zinc-200 shadow-sm group-hover:border-zinc-300 transition-all"
+                              className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl object-cover border-2 border-zinc-200 shadow-md group-hover:border-zinc-300 transition-all"
                             />
-                            <div className="absolute -bottom-2 -right-2 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border-2 border-zinc-200 flex items-center justify-center p-0.5 overflow-hidden shadow-md">
+                            <div className="absolute -bottom-2.5 -right-2.5 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-white border-2 border-zinc-200 flex items-center justify-center p-1 overflow-hidden shadow-lg ring-2 ring-white">
                               <img
                                 src={candidate.symbolUrl}
                                 alt="Symbol"

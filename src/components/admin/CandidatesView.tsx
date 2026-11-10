@@ -12,7 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Candidate } from "@/data/electionData";
-import { sortPostsByHierarchy } from "@/lib/utils";
+import { sortPostsByHierarchy, sortCandidatesByHierarchy } from "@/lib/utils";
 
 interface CandidatesViewProps {
   candidates: Candidate[];
@@ -49,16 +49,19 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
     ];
   }, [candidates]);
 
-  const filteredCandidates = candidates.filter((c) => {
-    const matchesPost =
-      selectedPost === "All" ||
-      c.post.toLowerCase().includes(selectedPost.toLowerCase());
-    const matchesSearch =
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.adNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.className.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesPost && matchesSearch;
-  });
+  const filteredCandidates = React.useMemo(() => {
+    const list = candidates.filter((c) => {
+      const matchesPost =
+        selectedPost === "All" ||
+        c.post.toLowerCase().includes(selectedPost.toLowerCase());
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.adNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.className.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesPost && matchesSearch;
+    });
+    return sortCandidatesByHierarchy(list);
+  }, [candidates, selectedPost, searchQuery]);
 
   const getPostBadgeColor = (post: string) => {
     switch (post) {
@@ -218,15 +221,15 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                 className="bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-none hover:shadow-xl hover:border-zinc-300 transition-all duration-300 flex flex-col justify-between group"
               >
                 <div>
-                  {/* Top row: Avatar, Post badge & Uploaded Symbol */}
+                  {/* Top row: Avatar, Post badge & Uploaded Symbol (Enlarged) */}
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <div className="relative">
                       <img
                         src={candidate.avatarUrl}
                         alt={candidate.name}
-                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-zinc-200 shadow-sm group-hover:border-zinc-300 transition-all"
+                        className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-zinc-200 shadow-md group-hover:border-zinc-300 transition-all"
                       />
-                      <div className="absolute -bottom-2 -right-2 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border-2 border-zinc-200 flex items-center justify-center p-1.5 overflow-hidden shadow-md">
+                      <div className="absolute -bottom-2.5 -right-2.5 w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white border-2 border-zinc-200 flex items-center justify-center p-1.5 overflow-hidden shadow-lg ring-2 ring-white">
                         <img
                           src={candidate.symbolUrl}
                           alt="Symbol"
@@ -335,12 +338,21 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                 {filteredCandidates.map((c) => (
                   <tr key={c.id} className="hover:bg-zinc-50/80 transition-colors">
                     <td className="py-3.5 px-5">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={c.avatarUrl}
-                          alt={c.name}
-                          className="w-12 h-12 rounded-xl object-cover border border-zinc-200 shrink-0"
-                        />
+                      <div className="flex items-center gap-3.5">
+                        <div className="relative shrink-0">
+                          <img
+                            src={c.avatarUrl}
+                            alt={c.name}
+                            className="w-14 h-14 rounded-xl object-cover border border-zinc-200"
+                          />
+                          <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-lg bg-white border border-zinc-200 flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
+                            <img
+                              src={c.symbolUrl}
+                              alt="Symbol"
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
+                        </div>
                         <div>
                           <p className="font-bold text-zinc-900">{c.name}</p>
                           <p className="text-[11px] text-zinc-400 truncate max-w-xs">

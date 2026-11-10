@@ -512,3 +512,260 @@ export async function resetAllElectionVotes(): Promise<boolean> {
   return true;
 }
 
+export interface DummyRoleTally {
+  post: string;
+  totalVotes: number;
+  allocations: Record<string, number>; // candidateId -> vote count
+  updatedAt?: string;
+}
+
+/**
+ * Fetch all dummy role tallies from Supabase.
+ * Read strictly from the isolated dummy_role_tallies table.
+ */
+export async function fetchDummyRoleTallies(): Promise<Record<string, DummyRoleTally>> {
+  try {
+    const { data, error } = await supabase
+      .from("dummy_role_tallies")
+      .select("*");
+
+    if (error || !data) {
+      return {};
+    }
+
+    const result: Record<string, DummyRoleTally> = {};
+    for (const row of data) {
+      result[row.post] = {
+        post: row.post,
+        totalVotes: row.total_votes || 0,
+        allocations: row.allocations || {},
+        updatedAt: row.updated_at,
+      };
+    }
+    return result;
+  } catch (err) {
+    console.warn("fetchDummyRoleTallies error:", err);
+    return {};
+  }
+}
+
+/**
+ * Save / Update dummy role tally in Supabase.
+ * Strictly writes to dummy_role_tallies & dummy_votes tables only.
+ * Guaranteed 100% isolated: DOES NOT touch ballots, voters, or candidate votes!
+ */
+export async function saveDummyRoleTally(
+  post: string,
+  totalVotes: number,
+  allocations: Record<string, number>,
+  candidates: Candidate[]
+): Promise<boolean> {
+  try {
+    const now = new Date().toISOString();
+
+    // 1. Upsert role tally record
+    const { error: roleError } = await supabase
+      .from("dummy_role_tallies")
+      .upsert({
+        post,
+        total_votes: totalVotes,
+        allocations,
+        updated_at: now,
+      });
+
+    if (roleError) {
+      console.error("Error upserting dummy_role_tallies:", roleError);
+    }
+
+    // 2. Upsert candidate-level records for relational queries
+    const relevantCandidates = candidates.filter(
+      (c) => c.post.toLowerCase() === post.toLowerCase()
+    );
+
+    if (relevantCandidates.length > 0) {
+      const records = relevantCandidates.map((c) => ({
+        candidate_id: c.id,
+        post: c.post,
+        candidate_name: c.name,
+        dummy_votes: allocations[c.id] || 0,
+        total_role_votes: totalVotes,
+        updated_at: now,
+      }));
+
+      const { error: candError } = await supabase
+        .from("dummy_votes")
+        .upsert(records);
+
+      if (candError) {
+        console.error("Error upserting dummy_votes:", candError);
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.error("Failed to save dummy role tally:", err);
+    return false;
+  }
+}
+
+export interface RoleRevealStatus {
+  post: string;
+  is_revealed: boolean;
+  revealed_at?: string;
+  data_source: "dummy" | "official";
+  winner_id?: string;
+  winner_name?: string;
+  winner_votes?: number;
+  total_votes?: number;
+  updated_at?: string;
+}
+
+/**
+ * Fetch all role reveal statuses from Supabase.
+ */
+export async function fetchRevealStatuses(): Promise<Record<string, RoleRevealStatus>> {
+  try {
+    const { data, error } = await supabase
+      .from("election_reveal_status")
+      .select("*");
+
+    if (error) {
+      console.error("Error fetching election_reveal_status:", error);
+      return {};
+    }
+
+    const map: Record<string, RoleRevealStatus> = {};
+    (data || []).forEach((row: any) => {
+      map[row.post] = {
+        post: row.post,
+        is_revealed: Boolean(row.is_revealed),
+        revealed_at: row.revealed_at,
+        data_source: row.data_source || "dummy",
+        winner_id: row.winner_id,
+        winner_name: row.winner_name,
+        winner_votes: row.winner_votes || 0,
+        total_votes: row.total_votes || 0,
+        updated_at: row.updated_at,
+      };
+    });
+    return map;
+  } catch (err) {
+    console.error("Failed to fetch reveal statuses:", err);
+    return {};
+  }
+}
+
+/**
+ * Update reveal status for a single role.
+ */
+export async function publishRoleReveal(
+  post: string,
+  isRevealed: boolean,
+  meta?: {
+    source?: "dummy" | "official";
+    winnerId?: string;
+    winnerName?: string;
+    winnerVotes?: number;
+    totalVotes?: number;
+  }
+): Promise<boolean> {
+  try {
+    const now = new Date().toISOString();
+    const payload = {
+      post,
+      is_revealed: isRevealed,
+      revealed_at: isRevealed ? now : null,
+      data_source: meta?.source || "dummy",
+      winner_id: meta?.winnerId || null,
+      winner_name: meta?.winnerName || null,
+      winner_votes: meta?.winnerVotes || 0,
+      total_votes: meta?.totalVotes || 0,
+      updated_at: now,
+    };
+
+    const { error } = await supabase
+      .from("election_reveal_status")
+      .upsert(payload);
+
+    if (error) {
+      console.error("Error publishing role reveal:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed to publish role reveal:", err);
+    return false;
+  }
+}
+
+/**
+ * Bulk publish or un-publish all roles at once.
+ */
+export async function publishAllRoleReveals(
+  items: Array<{
+    post: string;
+    isRevealed: boolean;
+    source?: "dummy" | "official";
+    winnerId?: string;
+    winnerName?: string;
+    winnerVotes?: number;
+    totalVotes?: number;
+  }>
+): Promise<boolean> {
+  try {
+    const now = new Date().toISOString();
+    const records = items.map((item) => ({
+      post: item.post,
+      is_revealed: item.isRevealed,
+      revealed_at: item.isRevealed ? now : null,
+      data_source: item.source || "dummy",
+      winner_id: item.winnerId || null,
+      winner_name: item.winnerName || null,
+      winner_votes: item.winnerVotes || 0,
+      total_votes: item.totalVotes || 0,
+      updated_at: now,
+    }));
+
+    const { error } = await supabase
+      .from("election_reveal_status")
+      .upsert(records);
+
+    if (error) {
+      console.error("Error bulk publishing reveals:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed bulk publishing reveals:", err);
+    return false;
+  }
+}
+
+/**
+ * Reset all role reveals to un-revealed.
+ */
+export async function resetAllRoleReveals(posts: string[]): Promise<boolean> {
+  try {
+    const now = new Date().toISOString();
+    const records = posts.map((post) => ({
+      post,
+      is_revealed: false,
+      revealed_at: null,
+      updated_at: now,
+    }));
+
+    const { error } = await supabase
+      .from("election_reveal_status")
+      .upsert(records);
+
+    if (error) {
+      console.error("Error resetting reveals:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Failed resetting reveals:", err);
+    return false;
+  }
+}
+

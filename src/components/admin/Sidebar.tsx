@@ -17,9 +17,13 @@ import {
   ChevronLeft,
   X,
   LogOut,
+  PieChart,
+  Sliders,
+  Tv,
+  PartyPopper,
 } from "lucide-react";
 
-export type AdminTab = "dashboard" | "candidates" | "voters" | "results" | "settings";
+export type AdminTab = "dashboard" | "candidates" | "voters" | "results" | "settings" | "simulation" | "reveal";
 
 interface SidebarProps {
   currentTab: AdminTab;
@@ -261,6 +265,62 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </button>
 
+            {/* Display Simulation / Dummy Votes Controller */}
+            <button
+              onClick={() => handleTabClick("simulation")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                currentTab === "simulation"
+                  ? "bg-purple-900 text-white"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-purple-50/70"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Sliders
+                  className={`w-4 h-4 ${
+                    currentTab === "simulation" ? "text-purple-300" : "text-purple-600"
+                  }`}
+                />
+                <span className="font-semibold">Display Simulation</span>
+              </div>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  currentTab === "simulation"
+                    ? "bg-purple-700 text-white"
+                    : "bg-purple-100 text-purple-700 border border-purple-200"
+                }`}
+              >
+                Dummy Tally
+              </span>
+            </button>
+
+            {/* Result Reveal Studio / Winner Announcement */}
+            <button
+              onClick={() => handleTabClick("reveal")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                currentTab === "reveal"
+                  ? "bg-amber-500 text-white font-bold"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-amber-50/80"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <PartyPopper
+                  className={`w-4 h-4 ${
+                    currentTab === "reveal" ? "text-white" : "text-amber-500"
+                  }`}
+                />
+                <span className="font-semibold">Result Reveal Studio</span>
+              </div>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  currentTab === "reveal"
+                    ? "bg-black/20 text-white"
+                    : "bg-amber-100 text-amber-800 border border-amber-300"
+                }`}
+              >
+                Publish Mode
+              </span>
+            </button>
+
             {/* Link to Student Voting Booth */}
             <Link
               href="/vote"
@@ -277,6 +337,66 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-[#FF5B26] border border-orange-200/60">
                 {postCount ? `${postCount} Post${postCount === 1 ? "" : "s"}` : "Live Booth"}
+              </span>
+            </Link>
+
+            {/* Link to 3-Role Pie Charts */}
+            <Link
+              href="/charts"
+              target="_blank"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                  onClose();
+                }
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/70 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <PieChart className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-zinc-800">3-Role Pie Charts</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Official
+              </span>
+            </Link>
+
+            {/* Link to Public Display (Dummy Showcase) */}
+            <Link
+              href="/display"
+              target="_blank"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                  onClose();
+                }
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-purple-50/60 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <Tv className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-zinc-800">Public Live Display</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                Projector / Screen
+              </span>
+            </Link>
+
+            {/* Link to Public Winner Reveal Screen */}
+            <Link
+              href="/reveal"
+              target="_blank"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                  onClose();
+                }
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-zinc-600 hover:text-zinc-900 hover:bg-amber-50/60 transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-3">
+                <PartyPopper className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-zinc-800">Public Winner Reveal</span>
+              </div>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                Stage / TV
               </span>
             </Link>
           </div>

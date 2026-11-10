@@ -1,12 +1,14 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   Calendar,
   SlidersHorizontal,
   Plus,
   Clock,
   Menu,
+  PieChart,
 } from "lucide-react";
 import { AdminTab } from "./Sidebar";
 
@@ -35,6 +37,10 @@ export const Header: React.FC<HeaderProps> = ({
         return "Export Official Tally";
       case "settings":
         return "Save Configuration";
+      case "simulation":
+        return "Open Display Screen";
+      case "reveal":
+        return "Public Reveal Screen";
       default:
         return "+ Add Candidate";
     }
@@ -98,6 +104,17 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Action Controls matching Merivo */}
       <div className="flex items-center gap-3 self-stretch sm:self-auto justify-end">
+        {/* Link to 3-Role Live Pie Charts */}
+        <Link
+          href="/charts"
+          target="_blank"
+          title="Open Live 3-Role Pie Charts URL"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-700 transition-colors"
+        >
+          <PieChart className="w-4 h-4 text-emerald-600" />
+          <span className="hidden md:inline">Live Pie Charts</span>
+        </Link>
+
         {/* Quick Filter button */}
         <button
           title="Filter Records"

@@ -101,3 +101,44 @@ export function playEVMClickBeep() {
     console.warn("Click beep audio error:", err);
   }
 }
+
+/**
+ * Celebratory victory fanfare arpeggio for winner announcements & party poppers
+ */
+export function playVictoryFanfare() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const notes = [
+      { freq: 523.25, time: 0.0, dur: 0.15 }, // C5
+      { freq: 659.25, time: 0.12, dur: 0.15 }, // E5
+      { freq: 783.99, time: 0.24, dur: 0.2 }, // G5
+      { freq: 1046.5, time: 0.4, dur: 0.8 }, // C6 (long triumphant sustain)
+    ];
+
+    notes.forEach((note) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(note.freq, now + note.time);
+
+      gain.gain.setValueAtTime(0, now + note.time);
+      gain.gain.linearRampToValueAtTime(0.3, now + note.time + 0.02);
+      gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + note.time + note.dur
+      );
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + note.time);
+      osc.stop(now + note.time + note.dur);
+    });
+  } catch (err) {
+    console.warn("Victory fanfare audio error:", err);
+  }
+}

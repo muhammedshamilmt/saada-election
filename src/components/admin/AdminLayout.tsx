@@ -8,6 +8,8 @@ import { CandidatesView } from "./CandidatesView";
 import { VotersView } from "./VotersView";
 import { ResultsView } from "./ResultsView";
 import { SettingsView } from "./SettingsView";
+import { DummyTallyView } from "./DummyTallyView";
+import { RevealControllerView } from "./RevealControllerView";
 import { AddCandidateModal } from "./AddCandidateModal";
 import { EditCandidateModal } from "./EditCandidateModal";
 import { AddVoterModal } from "./AddVoterModal";
@@ -79,8 +81,40 @@ export const AdminLayout: React.FC = () => {
           fetchVoters(),
         ]);
         if (isMounted) {
-          setCandidates(cands || []);
-          setVoters(vtrs || []);
+          setCandidates((prev) => {
+            const next = cands || [];
+            if (
+              prev.length === next.length &&
+              prev.every(
+                (c, i) =>
+                  c.id === next[i]?.id &&
+                  c.votes === next[i]?.votes &&
+                  c.name === next[i]?.name &&
+                  c.post === next[i]?.post &&
+                  c.status === next[i]?.status
+              )
+            ) {
+              return prev;
+            }
+            return next;
+          });
+
+          setVoters((prev) => {
+            const next = vtrs || [];
+            if (
+              prev.length === next.length &&
+              prev.every(
+                (v, i) =>
+                  v.id === next[i]?.id &&
+                  v.hasVoted === next[i]?.hasVoted &&
+                  v.name === next[i]?.name &&
+                  v.className === next[i]?.className
+              )
+            ) {
+              return prev;
+            }
+            return next;
+          });
         }
       } catch (err) {
         console.error("Supabase load error:", err);
@@ -300,6 +334,14 @@ export const AdminLayout: React.FC = () => {
               onResetVotes={handleResetVotes}
               onRestoreDefaults={handleRestoreDefaults}
             />
+          )}
+
+          {currentTab === "simulation" && (
+            <DummyTallyView candidates={candidates} />
+          )}
+
+          {currentTab === "reveal" && (
+            <RevealControllerView candidates={candidates} />
           )}
         </main>
       </div>

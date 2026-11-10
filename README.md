@@ -26,6 +26,13 @@ A modern, high-concurrency Digital Voting Machine (EVM) and Real-Time Election M
 - **Voter Registry**: Live directory of all registered voters, search by name/admission number, filter by class, and live vote status (`Eligible` / `Voted`).
 - **Real-Time Synchronisation**: Push updates powered by Supabase Realtime channels + 3-second background polling fallback. Standings update live on multi-screen displays without manual browser refreshes.
 
+### 🥧 3. Live 3-Role Pie Charts Visualizer (`/charts`)
+- **Direct GET URL Access**: Dedicated public/projector dashboard accessible directly at `/charts`.
+- **3 Role Donut / Pie Charts**: Dedicated interactive pie chart for each of the 3 primary roles: **President**, **General Secretary**, and **Treasurer**.
+- **GET Parameter Filtering**: Supports query param routing (e.g. `/charts?role=President`, `/charts?role=all`).
+- **Interactive SVG Donut**: Hover slice tooltips, candidate photo and symbol badges, percentage share, live vote counts, and leader crown indicators.
+- **Auditorium Projector Mode**: 1-click Fullscreen toggle for TV/projector broadcasting during vote counting.
+
 ---
 
 ## 🏗️ Architecture & Tech Stack
