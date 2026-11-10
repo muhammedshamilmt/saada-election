@@ -150,7 +150,7 @@ export default function DisplayPage() {
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-between text-zinc-900 font-sans antialiased selection:bg-[#FF5B26]/20 selection:text-[#FF5B26]">
       {/* Top Broadcasting Bar */}
       <header className="bg-white border-b border-zinc-200/90 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-[1880px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#FF5B26] text-white flex items-center justify-center font-black border border-[#FF5B26] shadow-sm shadow-[#FF5B26]/20">
               <PieChartIcon className="w-5 h-5" />
@@ -215,37 +215,37 @@ export default function DisplayPage() {
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-6">
+      {/* Main Content Area: Fluid Wide Layout Avoiding Blank Margins */}
+      <main className="flex-1 max-w-[1880px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-8 space-y-8">
         {/* Banner */}
-        <div className="bg-white rounded-3xl p-6 border border-zinc-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="bg-white rounded-[32px] p-6 sm:p-8 border border-zinc-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs">
           <div>
             <div className="flex items-center gap-2 text-zinc-500 text-xs font-semibold mb-1">
               <Award className="w-4 h-4 text-[#FF5B26]" />
               <span>Executive Council Breakdown</span>
             </div>
-            <h2 className="text-2xl font-black text-zinc-900 tracking-tight font-sans">
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight font-sans">
               Contested Role Pie Charts
             </h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 max-w-2xl font-medium">
               Real-time candidate vote share across President, General Secretary, and Treasurer positions.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-200 text-right">
+            <div className="px-5 py-3.5 rounded-2xl bg-zinc-50 border border-zinc-200/80 text-right">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
                 Total Tallied
               </span>
-              <span className="text-xl font-black text-zinc-900 font-sans">
+              <span className="text-2xl font-black text-zinc-900 font-sans">
                 {totalSimulatedVotes.toLocaleString()} votes
               </span>
             </div>
           </div>
         </div>
 
-        {/* The 3 Pie Charts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-300">
+        {/* The 3 Expanded Pie Charts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 xl:gap-10 animate-in fade-in duration-300 items-stretch">
           {distinctRoles.map((roleName, idx) => {
             const roleCandidates = simulatedCandidates.filter(
               (c) => c.post.toLowerCase() === roleName.toLowerCase()

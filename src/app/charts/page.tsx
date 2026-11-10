@@ -172,7 +172,7 @@ function ChartsContent() {
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-between text-zinc-900 font-sans antialiased selection:bg-[#FF5B26]/20 selection:text-[#FF5B26]">
       {/* Top Navigation & Controls Bar */}
       <header className="bg-white border-b border-zinc-200/90 sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-[1880px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Brand & Page Identity */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#FF5B26] text-white flex items-center justify-center font-black border border-[#FF5B26] shadow-sm shadow-[#FF5B26]/20">
@@ -233,7 +233,7 @@ function ChartsContent() {
       </header>
 
       {/* Main Charts Arena */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-8 space-y-6">
+      <main className="flex-1 max-w-[1880px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-8 space-y-8">
         {/* Metric Summary Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl p-4 border border-zinc-200/90 shadow-none hover:shadow-md transition-shadow">
