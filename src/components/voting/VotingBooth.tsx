@@ -26,6 +26,7 @@ import {
   INITIAL_VOTERS,
   INITIAL_ELECTION_CONFIG,
 } from "@/data/electionData";
+import { sortPostsByHierarchy } from "@/lib/utils";
 import {
   fetchCandidates,
   fetchVoters,
@@ -113,10 +114,10 @@ export const VotingBooth: React.FC = () => {
   const [authError, setAuthError] = useState("");
   const [step, setStep] = useState<number>(0);
 
-  // Dynamic Contested Posts derived from registered candidates
+  // Dynamic Contested Posts derived from registered candidates sorted by official hierarchy (President, General Secretary, Treasurer...)
   const contestedPosts = React.useMemo(() => {
     const list = Array.from(new Set(candidates.map((c) => c.post).filter(Boolean)));
-    return list;
+    return sortPostsByHierarchy(list);
   }, [candidates]);
 
   const totalRoles = contestedPosts.length;
@@ -166,8 +167,7 @@ export const VotingBooth: React.FC = () => {
 
     if (voterFound.hasVoted) {
       setAuthError(
-        `Voter "${voterFound.name}" (${voterFound.adNo}) has ALREADY cast their ballot at ${
-          voterFound.votedAt || "earlier today"
+        `Voter "${voterFound.name}" (${voterFound.adNo}) has ALREADY cast their ballot at ${voterFound.votedAt || "earlier today"
         }. Strictly 1 voting session is permitted per student.`
       );
       return;
@@ -401,13 +401,12 @@ export const VotingBooth: React.FC = () => {
                   return (
                     <div
                       key={pName}
-                      className={`p-2 rounded-xl border text-center transition-all ${
-                        isCurrent
-                          ? "bg-orange-50 border-[#FF5B26] text-[#FF5B26]"
-                          : isChosen
+                      className={`p-2 rounded-xl border text-center transition-all ${isCurrent
+                        ? "bg-orange-50 border-[#FF5B26] text-[#FF5B26]"
+                        : isChosen
                           ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                           : "bg-zinc-50 border-zinc-200 text-zinc-400"
-                      }`}
+                        }`}
                     >
                       <p className="text-[10px] font-bold uppercase tracking-wider">
                         Vote {roleNum} of {totalRoles}
@@ -473,11 +472,10 @@ export const VotingBooth: React.FC = () => {
                     <div
                       key={candidate.id}
                       onClick={handleCardClick}
-                      className={`rounded-2xl p-5 border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between group ${
-                        isSelected
-                          ? "border-[#FF5B26] bg-orange-50/20 shadow-lg shadow-[#FF5B26]/10 ring-2 ring-[#FF5B26]/20"
-                          : "bg-white border-zinc-200/90 shadow-none hover:shadow-xl hover:border-zinc-300"
-                      }`}
+                      className={`rounded-2xl p-5 border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between group ${isSelected
+                        ? "border-[#FF5B26] bg-orange-50/20 shadow-lg shadow-[#FF5B26]/10 ring-2 ring-[#FF5B26]/20"
+                        : "bg-white border-zinc-200/90 shadow-none hover:shadow-xl hover:border-zinc-300"
+                        }`}
                     >
                       <div>
                         {/* Top row: Avatar & Symbol with selection check */}
@@ -486,9 +484,9 @@ export const VotingBooth: React.FC = () => {
                             <img
                               src={candidate.avatarUrl}
                               alt={candidate.name}
-                              className="w-16 h-16 rounded-2xl object-cover border border-zinc-200"
+                              className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-zinc-200 shadow-sm group-hover:border-zinc-300 transition-all"
                             />
-                            <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-xl bg-white border border-zinc-200 flex items-center justify-center p-1 shadow-2xs">
+                            <div className="absolute -bottom-2 -right-2 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border-2 border-zinc-200 flex items-center justify-center p-0.5 overflow-hidden shadow-md">
                               <img
                                 src={candidate.symbolUrl}
                                 alt="Symbol"
@@ -499,11 +497,10 @@ export const VotingBooth: React.FC = () => {
 
                           {/* Select radio pill */}
                           <div
-                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                              isSelected
-                                ? "bg-[#FF5B26] border-[#FF5B26] text-white"
-                                : "border-zinc-300 bg-white group-hover:border-zinc-400"
-                            }`}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isSelected
+                              ? "bg-[#FF5B26] border-[#FF5B26] text-white"
+                              : "border-zinc-300 bg-white group-hover:border-zinc-400"
+                              }`}
                           >
                             {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                           </div>
@@ -540,11 +537,10 @@ export const VotingBooth: React.FC = () => {
                             e.stopPropagation();
                             handleCardClick();
                           }}
-                          className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                            isSelected
-                              ? "bg-[#FF5B26] text-white shadow-xs"
-                              : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
-                          }`}
+                          className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${isSelected
+                            ? "bg-[#FF5B26] text-white shadow-xs"
+                            : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
+                            }`}
                         >
                           {isSelected ? (
                             <>
@@ -667,12 +663,12 @@ export const VotingBooth: React.FC = () => {
                         <img
                           src={cand.avatarUrl}
                           alt={cand.name}
-                          className="w-12 h-12 rounded-xl object-cover border border-zinc-200 shrink-0"
+                          className="w-16 h-16 rounded-2xl object-cover border-2 border-zinc-200 shrink-0 shadow-xs"
                         />
                         <div>
                           <p className="font-bold text-sm text-zinc-900">{cand.name}</p>
                           <p className="text-xs text-zinc-500">Class {cand.className}</p>
-                          <div className="w-5 h-5 rounded border border-zinc-200 flex items-center justify-center p-0.5 mt-1 bg-zinc-50">
+                          <div className="w-7 h-7 rounded-lg border border-zinc-200 flex items-center justify-center p-1 mt-1 bg-white shadow-2xs">
                             <img
                               src={cand.symbolUrl}
                               alt="Symbol"

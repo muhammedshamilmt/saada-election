@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Candidate } from "@/data/electionData";
+import { sortPostsByHierarchy } from "@/lib/utils";
 
 interface LeaderboardPodiumProps {
   candidates: Candidate[];
@@ -23,13 +24,13 @@ export const LeaderboardPodium: React.FC<LeaderboardPodiumProps> = ({
 }) => {
   const [selectedPost, setSelectedPost] = useState<string>("President");
 
-  // Dynamically derive posts from registered candidates
+  // Dynamically derive posts from registered candidates sorted by official hierarchy (President, General Secretary, Treasurer...)
   const availablePosts = React.useMemo(() => {
     const fromCandidates = Array.from(
       new Set(candidates.map((c) => c.post).filter(Boolean))
     );
     if (fromCandidates.length > 0) {
-      return [...fromCandidates, "All (Top Voted)"];
+      return [...sortPostsByHierarchy(fromCandidates), "All (Top Voted)"];
     }
     return [
       "President",
@@ -136,9 +137,9 @@ export const LeaderboardPodium: React.FC<LeaderboardPodiumProps> = ({
                     <img
                       src={top2.avatarUrl}
                       alt={top2.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white shadow-sm ring-1 ring-zinc-200 group-hover:scale-105 transition-transform"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white shadow-sm ring-1 ring-zinc-200 group-hover:scale-105 transition-transform"
                     />
-                    <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white border border-zinc-200 flex items-center justify-center p-0.5">
+                    <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center p-1 shadow-xs">
                       <img
                         src={top2.symbolUrl}
                         alt="Symbol"
@@ -191,9 +192,9 @@ export const LeaderboardPodium: React.FC<LeaderboardPodiumProps> = ({
                     <img
                       src={top1.avatarUrl}
                       alt={top1.name}
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-amber-300 shadow-md ring-2 ring-amber-400/30 group-hover:scale-105 transition-transform"
+                      className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-2 border-amber-300 shadow-md ring-2 ring-amber-400/30 group-hover:scale-105 transition-transform"
                     />
-                    <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-white border border-amber-300 flex items-center justify-center p-1 shadow-2xs">
+                    <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-white border border-amber-300 flex items-center justify-center p-1 shadow-xs">
                       <img
                         src={top1.symbolUrl}
                         alt="Symbol"
@@ -242,9 +243,9 @@ export const LeaderboardPodium: React.FC<LeaderboardPodiumProps> = ({
                     <img
                       src={top3.avatarUrl}
                       alt={top3.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-white shadow-sm ring-1 ring-zinc-200 group-hover:scale-105 transition-transform"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white shadow-sm ring-1 ring-zinc-200 group-hover:scale-105 transition-transform"
                     />
-                    <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white border border-zinc-200 flex items-center justify-center p-0.5">
+                    <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-white border border-zinc-200 flex items-center justify-center p-1 shadow-xs">
                       <img
                         src={top3.symbolUrl}
                         alt="Symbol"

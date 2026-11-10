@@ -24,6 +24,8 @@ export const DEFAULT_POSTS = [
 
 export type DefaultPost = (typeof DEFAULT_POSTS)[number];
 
+export { sortPostsByHierarchy } from "@/lib/utils";
+
 export interface Candidate {
   id: string;
   name: string;

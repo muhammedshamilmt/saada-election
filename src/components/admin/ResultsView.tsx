@@ -8,6 +8,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { Candidate, Voter } from "@/data/electionData";
+import { sortPostsByHierarchy } from "@/lib/utils";
 import { LeaderboardPodium } from "./LeaderboardPodium";
 
 interface ResultsViewProps {
@@ -27,7 +28,7 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
     const fromCandidates = Array.from(
       new Set(candidates.map((c) => c.post).filter(Boolean))
     );
-    if (fromCandidates.length > 0) return fromCandidates;
+    if (fromCandidates.length > 0) return sortPostsByHierarchy(fromCandidates);
     return [
       "President",
       "General Secretary",
@@ -211,14 +212,14 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
                           <img
                             src={c.avatarUrl}
                             alt={c.name}
-                            className="w-9 h-9 rounded-xl object-cover border border-zinc-200"
+                            className="w-12 h-12 rounded-xl object-cover border border-zinc-200 shrink-0"
                           />
                           <div>
                             <div className="flex items-center gap-2">
                               <p className="font-bold text-zinc-900 text-sm">
                                 {c.name}
                               </p>
-                              <div className="w-5 h-5 rounded border border-zinc-200 flex items-center justify-center p-0.5 bg-white">
+                              <div className="w-6 h-6 rounded-lg border border-zinc-200 flex items-center justify-center p-0.5 bg-white shadow-2xs">
                                 <img
                                   src={c.symbolUrl}
                                   alt="Symbol"

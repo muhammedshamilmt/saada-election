@@ -101,6 +101,32 @@ export async function saveCandidate(candidate: Candidate): Promise<boolean> {
 }
 
 /**
+ * Update an existing candidate in Supabase
+ */
+export async function updateCandidate(candidate: Candidate): Promise<boolean> {
+  const { error } = await supabase
+    .from("candidates")
+    .update({
+      name: candidate.name,
+      post: candidate.post,
+      ad_no: candidate.adNo,
+      class_name: candidate.className,
+      tagline: candidate.tagline,
+      symbol_url: candidate.symbolUrl,
+      avatar_url: candidate.avatarUrl,
+      votes: candidate.votes,
+      status: candidate.status,
+    })
+    .eq("id", candidate.id);
+
+  if (error) {
+    console.error("Error updating candidate:", error);
+    return false;
+  }
+  return true;
+}
+
+/**
  * Delete a candidate from Supabase
  */
 export async function deleteCandidate(id: string): Promise<boolean> {

@@ -6,21 +6,25 @@ import {
   Search,
   Plus,
   Trash2,
+  Pencil,
   LayoutGrid,
   List,
   CheckCircle2,
 } from "lucide-react";
 import { Candidate } from "@/data/electionData";
+import { sortPostsByHierarchy } from "@/lib/utils";
 
 interface CandidatesViewProps {
   candidates: Candidate[];
   onOpenAddModal: () => void;
+  onEditCandidate: (candidate: Candidate) => void;
   onDeleteCandidate: (id: string) => void;
 }
 
 export const CandidatesView: React.FC<CandidatesViewProps> = ({
   candidates,
   onOpenAddModal,
+  onEditCandidate,
   onDeleteCandidate,
 }) => {
   const [selectedPost, setSelectedPost] = useState<string>("All");
@@ -32,7 +36,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
       new Set(candidates.map((c) => c.post).filter(Boolean))
     );
     if (fromCandidates.length > 0) {
-      return ["All", ...fromCandidates];
+      return ["All", ...sortPostsByHierarchy(fromCandidates)];
     }
     return [
       "All",
@@ -220,9 +224,9 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                       <img
                         src={candidate.avatarUrl}
                         alt={candidate.name}
-                        className="w-14 h-14 rounded-2xl object-cover border border-zinc-200"
+                        className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-zinc-200 shadow-sm group-hover:border-zinc-300 transition-all"
                       />
-                      <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-xl bg-white border border-zinc-200 flex items-center justify-center p-1 overflow-hidden">
+                      <div className="absolute -bottom-2 -right-2 w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border-2 border-zinc-200 flex items-center justify-center p-1.5 overflow-hidden shadow-md">
                         <img
                           src={candidate.symbolUrl}
                           alt="Symbol"
@@ -289,13 +293,22 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                       Approved
                     </span>
 
-                    <button
-                      onClick={() => onDeleteCandidate(candidate.id)}
-                      title="Withdraw Candidate"
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => onEditCandidate(candidate)}
+                        title="Edit Candidate Details"
+                        className="p-1.5 rounded-lg text-zinc-400 hover:text-[#FF5B26] hover:bg-orange-50 transition-colors cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onDeleteCandidate(candidate.id)}
+                        title="Withdraw Candidate"
+                        className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -326,7 +339,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                         <img
                           src={c.avatarUrl}
                           alt={c.name}
-                          className="w-9 h-9 rounded-xl object-cover border border-zinc-200"
+                          className="w-12 h-12 rounded-xl object-cover border border-zinc-200 shrink-0"
                         />
                         <div>
                           <p className="font-bold text-zinc-900">{c.name}</p>
@@ -354,7 +367,7 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="w-7 h-7 rounded-lg border border-zinc-200 flex items-center justify-center p-1 bg-white">
+                      <div className="w-9 h-9 rounded-xl border border-zinc-200 flex items-center justify-center p-1.5 bg-white shadow-2xs">
                         <img
                           src={c.symbolUrl}
                           alt="Symbol"
@@ -366,12 +379,22 @@ export const CandidatesView: React.FC<CandidatesViewProps> = ({
                       {c.votes}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <button
-                        onClick={() => onDeleteCandidate(c.id)}
-                        className="text-zinc-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => onEditCandidate(c)}
+                          title="Edit Candidate Details"
+                          className="text-zinc-400 hover:text-[#FF5B26] p-1.5 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDeleteCandidate(c.id)}
+                          title="Withdraw Candidate"
+                          className="text-zinc-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

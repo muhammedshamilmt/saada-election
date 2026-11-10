@@ -9,6 +9,7 @@ import { VotersView } from "./VotersView";
 import { ResultsView } from "./ResultsView";
 import { SettingsView } from "./SettingsView";
 import { AddCandidateModal } from "./AddCandidateModal";
+import { EditCandidateModal } from "./EditCandidateModal";
 import { AddVoterModal } from "./AddVoterModal";
 import { ImportVotersModal } from "./ImportVotersModal";
 import {
@@ -19,10 +20,12 @@ import {
   Voter,
   ElectionConfig,
 } from "@/data/electionData";
+import { sortPostsByHierarchy } from "@/lib/utils";
 import {
   supabase,
   fetchCandidates,
   saveCandidate,
+  updateCandidate,
   deleteCandidate,
   fetchVoters,
   saveVoter,
@@ -40,6 +43,7 @@ export const AdminLayout: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
+  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null);
   const [isAddVoterOpen, setIsAddVoterOpen] = useState(false);
   const [isImportVotersOpen, setIsImportVotersOpen] = useState(false);
 
@@ -142,6 +146,13 @@ export const AdminLayout: React.FC = () => {
   const handleAddCandidate = async (newCandidate: Candidate) => {
     setCandidates((prev) => [newCandidate, ...prev]);
     await saveCandidate(newCandidate);
+  };
+
+  const handleUpdateCandidate = async (updatedCandidate: Candidate) => {
+    setCandidates((prev) =>
+      prev.map((c) => (c.id === updatedCandidate.id ? updatedCandidate : c))
+    );
+    await updateCandidate(updatedCandidate);
   };
 
   const handleDeleteCandidate = async (id: string) => {
@@ -259,6 +270,7 @@ export const AdminLayout: React.FC = () => {
             <CandidatesView
               candidates={candidates}
               onOpenAddModal={() => setIsAddCandidateOpen(true)}
+              onEditCandidate={(candidate) => setEditingCandidate(candidate)}
               onDeleteCandidate={handleDeleteCandidate}
             />
           )}
@@ -297,7 +309,15 @@ export const AdminLayout: React.FC = () => {
         isOpen={isAddCandidateOpen}
         onClose={() => setIsAddCandidateOpen(false)}
         onAddCandidate={handleAddCandidate}
-        existingPosts={Array.from(new Set(candidates.map((c) => c.post).filter(Boolean)))}
+        existingPosts={sortPostsByHierarchy(Array.from(new Set(candidates.map((c) => c.post).filter(Boolean))))}
+      />
+
+      <EditCandidateModal
+        isOpen={Boolean(editingCandidate)}
+        candidate={editingCandidate}
+        onClose={() => setEditingCandidate(null)}
+        onUpdateCandidate={handleUpdateCandidate}
+        existingPosts={sortPostsByHierarchy(Array.from(new Set(candidates.map((c) => c.post).filter(Boolean))))}
       />
 
       <AddVoterModal
