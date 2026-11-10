@@ -254,23 +254,42 @@ export const RolePieChart: React.FC<RolePieChartProps> = ({
                 })}
               </svg>
 
-              {/* Center Donut Hole Card */}
-              <div className="absolute inset-0 m-auto w-24 h-24 rounded-full bg-white shadow-md border border-zinc-100 flex flex-col items-center justify-center text-center p-2 pointer-events-none transition-transform duration-200">
-                {activeCandidate ? (
-                  <>
-                    {activeCandidate.id === leader?.id && totalVotes > 0 && (
-                      <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 mb-0.5" />
-                    )}
-                    <span className="text-lg font-black text-zinc-900 leading-tight">
-                      {activeSlice ? `${activeSlice.share}%` : "0%"}
-                    </span>
-                    <span className="text-[10px] font-bold text-zinc-400 truncate max-w-[80px]">
-                      {activeCandidate.name.split(" ")[0]}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs font-bold text-zinc-400">Total</span>
-                )}
+              {/* Center Donut Hole Card with Pulsing Beacon & Breathing Core */}
+              <div className="absolute inset-0 m-auto w-24 h-24 flex items-center justify-center pointer-events-none">
+                {/* Outer radiating pulse beacon wave */}
+                <div
+                  className="absolute w-24 h-24 rounded-full animate-ping opacity-25 pointer-events-none"
+                  style={{
+                    backgroundColor: activeSlice?.color || "#FF5B26",
+                    animationDuration: "3s",
+                  }}
+                />
+
+                {/* Core breathing white card */}
+                <div
+                  className="relative w-24 h-24 rounded-full bg-white border border-zinc-100 flex flex-col items-center justify-center text-center p-2 animate-core-pulse shadow-md transition-all duration-300 z-10"
+                  style={{
+                    boxShadow: `0 4px 18px rgba(0,0,0,0.08), 0 0 16px ${
+                      activeSlice?.color || "#FF5B26"
+                    }30`,
+                  }}
+                >
+                  {activeCandidate ? (
+                    <>
+                      {activeCandidate.id === leader?.id && totalVotes > 0 && (
+                        <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-400 mb-0.5 animate-bounce" />
+                      )}
+                      <span className="text-lg font-black text-zinc-900 leading-tight">
+                        {activeSlice ? `${activeSlice.share}%` : "0%"}
+                      </span>
+                      <span className="text-[10px] font-bold text-zinc-400 truncate max-w-[80px]">
+                        {activeCandidate.name.split(" ")[0]}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xs font-bold text-zinc-400">Total</span>
+                  )}
+                </div>
               </div>
             </div>
           )}

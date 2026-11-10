@@ -88,3 +88,20 @@
   animation: pulseBeacon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Core breathing heartbeat pulse animation for pie chart donut hole */
+@keyframes coreBreathingPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 0 rgba(255, 91, 38, 0.25);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 10px rgba(255, 91, 38, 0);
+  }
+}
+
+.animate-core-pulse {
+  animation: coreBreathingPulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+
