@@ -10,6 +10,7 @@ import { ResultsView } from "./ResultsView";
 import { SettingsView } from "./SettingsView";
 import { DummyTallyView } from "./DummyTallyView";
 import { RevealControllerView } from "./RevealControllerView";
+import { ClassVotesView } from "./ClassVotesView";
 import { AddCandidateModal } from "./AddCandidateModal";
 import { EditCandidateModal } from "./EditCandidateModal";
 import { AddVoterModal } from "./AddVoterModal";
@@ -342,6 +343,10 @@ export const AdminLayout: React.FC = () => {
 
           {currentTab === "reveal" && (
             <RevealControllerView candidates={candidates} />
+          )}
+
+          {currentTab === "class-votes" && (
+            <ClassVotesView candidates={candidates} voters={voters} />
           )}
         </main>
       </div>

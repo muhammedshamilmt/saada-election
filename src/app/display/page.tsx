@@ -117,12 +117,8 @@ export default function DisplayPage() {
       if (tally && tally.allocations && tally.allocations[c.id] !== undefined) {
         assignedVotes = tally.allocations[c.id];
       } else {
-        // Fallback demo allocation if admin hasn't set any value yet
-        const sameRoleCands = candidates.filter(
-          (other) => other.post.toLowerCase() === c.post.toLowerCase()
-        );
-        const idx = sameRoleCands.findIndex((other) => other.id === c.id);
-        assignedVotes = idx === 0 ? 58 : 42;
+        // Starts at 0 votes
+        assignedVotes = 0;
       }
 
       return {

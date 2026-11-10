@@ -21,9 +21,10 @@ import {
   Sliders,
   Tv,
   PartyPopper,
+  GraduationCap,
 } from "lucide-react";
 
-export type AdminTab = "dashboard" | "candidates" | "voters" | "results" | "settings" | "simulation" | "reveal";
+export type AdminTab = "dashboard" | "candidates" | "voters" | "results" | "settings" | "simulation" | "reveal" | "class-votes";
 
 interface SidebarProps {
   currentTab: AdminTab;
@@ -263,6 +264,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
               )}
+            </button>
+
+            {/* Class-wise Votes Breakdown */}
+            <button
+              onClick={() => handleTabClick("class-votes")}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                currentTab === "class-votes"
+                  ? "bg-zinc-900 text-white font-bold"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-orange-50/70"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <GraduationCap
+                  className={`w-4 h-4 ${
+                    currentTab === "class-votes" ? "text-white" : "text-[#FF5B26]"
+                  }`}
+                />
+                <span className="font-semibold">Class-wise Breakdown</span>
+              </div>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  currentTab === "class-votes"
+                    ? "bg-[#FF5B26] text-white"
+                    : "bg-orange-50 text-[#FF5B26] border border-orange-200/60"
+                }`}
+              >
+                Demographics
+              </span>
             </button>
 
             {/* Display Simulation / Dummy Votes Controller */}

@@ -221,18 +221,13 @@ export default function RevealPage() {
       if (!isOfficialSource) {
         // Dummy/Simulation source
         const dummyTally = dummyTallies[post];
-        totalVotes = dummyTally?.totalVotes || status?.total_votes || 100;
+        totalVotes = dummyTally?.totalVotes || status?.total_votes || 162;
         candVotesMap = dummyTally?.allocations || {};
 
         if (Object.keys(candVotesMap).length === 0 && roleCands.length > 0) {
-          if (roleCands.length === 2) {
-            candVotesMap[roleCands[0].id] = 55;
-            candVotesMap[roleCands[1].id] = 45;
-          } else {
-            roleCands.forEach((c) => {
-              candVotesMap[c.id] = Math.floor(totalVotes / roleCands.length);
-            });
-          }
+          roleCands.forEach((c) => {
+            candVotesMap[c.id] = 0;
+          });
         }
       } else {
         // Official Real Ballots

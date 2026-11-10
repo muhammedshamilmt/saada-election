@@ -125,19 +125,14 @@ export const RevealControllerView: React.FC<RevealControllerViewProps> = ({
 
       if (dataSource === "dummy") {
         const dummyTally = dummyTallies[post];
-        totalVotes = dummyTally?.totalVotes || 100;
+        totalVotes = dummyTally?.totalVotes || 162;
         candVotesMap = dummyTally?.allocations || {};
 
-        // If no allocations set yet, default split
+        // If no allocations set yet, default each candidate to 0
         if (Object.keys(candVotesMap).length === 0 && roleCands.length > 0) {
-          if (roleCands.length === 2) {
-            candVotesMap[roleCands[0].id] = 55;
-            candVotesMap[roleCands[1].id] = 45;
-          } else {
-            roleCands.forEach((c) => {
-              candVotesMap[c.id] = Math.floor(totalVotes / roleCands.length);
-            });
-          }
+          roleCands.forEach((c) => {
+            candVotesMap[c.id] = 0;
+          });
         }
       } else {
         // Official Real Ballots from candidates table

@@ -98,7 +98,7 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
             const saved = existing[role];
             const allocations = { ...(saved.allocations || {}) };
 
-            // Ensure all current candidates have an entry
+            // Ensure all current candidates have an entry (defaulting to 0)
             roleCands.forEach((c) => {
               if (allocations[c.id] === undefined) {
                 allocations[c.id] = 0;
@@ -106,26 +106,17 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
             });
 
             next[role] = {
-              totalVotes: saved.totalVotes || 100,
+              totalVotes: saved.totalVotes || 162,
               allocations,
             };
           } else {
-            // Initialize fresh default 50/50 balance
-            const totalVotes = 100;
+            // Initialize fresh with each candidate starting at 0 votes and 162 total pool
+            const totalVotes = 162;
             const allocations: Record<string, number> = {};
 
-            if (roleCands.length === 2) {
-              allocations[roleCands[0].id] = 55;
-              allocations[roleCands[1].id] = 45;
-            } else if (roleCands.length > 0) {
-              const split = Math.floor(totalVotes / roleCands.length);
-              roleCands.forEach((c, idx) => {
-                allocations[c.id] =
-                  idx === 0
-                    ? totalVotes - split * (roleCands.length - 1)
-                    : split;
-              });
-            }
+            roleCands.forEach((c) => {
+              allocations[c.id] = 0;
+            });
 
             next[role] = {
               totalVotes,
@@ -148,7 +139,7 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
     };
   }, [candidatesKey]);
 
-  // Real-time auto balancing handler when changing Candidate 1 or Candidate 2
+  // Independent vote allocation handler (NO auto-subtraction from other candidates)
   const handleVoteChange = (
     role: string,
     targetCandidateId: string,
@@ -158,60 +149,23 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
       const current = prev[role];
       if (!current) return prev;
 
-      const total = current.totalVotes || 100;
-      const newVotes = Math.max(0, Math.min(total, rawNewVotes));
+      const total = current.totalVotes || 162;
+      const parsed = isNaN(rawNewVotes) ? 0 : rawNewVotes;
 
-      const roleCands = candidates.filter(
-        (c) => c.post.toLowerCase() === role.toLowerCase()
-      );
+      // Calculate other candidates' current sum
+      const otherSum = Object.entries(current.allocations)
+        .filter(([id]) => id !== targetCandidateId)
+        .reduce((sum, [, v]) => sum + (v || 0), 0);
 
+      // Candidate can be set from 0 up to remaining pool (max Total Pool 162)
+      const maxAllowed = Math.max(0, total - otherSum);
+      const newVotes = Math.max(0, Math.min(parsed, maxAllowed));
+
+      // ONLY update the target candidate. Other candidate is 100% untouched!
       const nextAllocations: Record<string, number> = {
         ...current.allocations,
         [targetCandidateId]: newVotes,
       };
-
-      // 2-Candidate Auto-Balancing:
-      // If Candidate 1 is entered, Candidate 2 automatically balances: (total - Candidate 1)
-      if (roleCands.length === 2) {
-        const otherCandidate = roleCands.find(
-          (c) => c.id !== targetCandidateId
-        );
-        if (otherCandidate) {
-          nextAllocations[otherCandidate.id] = Math.max(0, total - newVotes);
-        }
-      } else if (roleCands.length > 2) {
-        // Multi-candidate auto-balance: distribute remaining votes among remaining candidates
-        const otherCandidates = roleCands.filter(
-          (c) => c.id !== targetCandidateId
-        );
-        const remaining = Math.max(0, total - newVotes);
-        const otherSum = otherCandidates.reduce(
-          (acc, c) => acc + (current.allocations[c.id] || 0),
-          0
-        );
-
-        if (otherSum > 0) {
-          let allocatedSoFar = 0;
-          otherCandidates.forEach((c, idx) => {
-            if (idx === otherCandidates.length - 1) {
-              nextAllocations[c.id] = Math.max(0, remaining - allocatedSoFar);
-            } else {
-              const proportion = (current.allocations[c.id] || 0) / otherSum;
-              const val = Math.round(remaining * proportion);
-              nextAllocations[c.id] = val;
-              allocatedSoFar += val;
-            }
-          });
-        } else {
-          const split = Math.floor(remaining / otherCandidates.length);
-          otherCandidates.forEach((c, idx) => {
-            nextAllocations[c.id] =
-              idx === 0
-                ? remaining - split * (otherCandidates.length - 1)
-                : split;
-          });
-        }
-      }
 
       return {
         ...prev,
@@ -224,7 +178,29 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
     });
   };
 
-  // Total votes pool adjustment with proportional re-balancing
+  // Reset all candidates for a role to 0 votes
+  const resetRoleToZero = (role: string) => {
+    setRoleStates((prev) => {
+      const current = prev[role];
+      if (!current) return prev;
+
+      const zeroAllocations: Record<string, number> = {};
+      Object.keys(current.allocations).forEach((id) => {
+        zeroAllocations[id] = 0;
+      });
+
+      return {
+        ...prev,
+        [role]: {
+          ...current,
+          allocations: zeroAllocations,
+          savedSuccess: false,
+        },
+      };
+    });
+  };
+
+  // Total votes pool adjustment (defaults to 162)
   const handleTotalPoolChange = (role: string, newTotal: number) => {
     const validTotal = Math.max(1, newTotal);
 
@@ -232,32 +208,11 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
       const current = prev[role];
       if (!current) return prev;
 
-      const roleCands = candidates.filter(
-        (c) => c.post.toLowerCase() === role.toLowerCase()
-      );
-
+      // Preserve existing candidate votes without forced auto-subtraction
       const nextAllocations: Record<string, number> = {};
-
-      if (roleCands.length === 2) {
-        const c1 = roleCands[0];
-        const c2 = roleCands[1];
-        const prevC1 = current.allocations[c1.id] || 0;
-        const prevC2 = current.allocations[c2.id] || 0;
-        const prevTotal = prevC1 + prevC2 || current.totalVotes || 1;
-
-        const ratio = prevC1 / prevTotal;
-        const newC1 = Math.round(validTotal * ratio);
-        nextAllocations[c1.id] = newC1;
-        nextAllocations[c2.id] = Math.max(0, validTotal - newC1);
-      } else {
-        const split = Math.floor(validTotal / (roleCands.length || 1));
-        roleCands.forEach((c, idx) => {
-          nextAllocations[c.id] =
-            idx === 0
-              ? validTotal - split * (roleCands.length - 1)
-              : split;
-        });
-      }
+      Object.entries(current.allocations).forEach(([id, val]) => {
+        nextAllocations[id] = Math.min(val, validTotal);
+      });
 
       return {
         ...prev,
@@ -276,7 +231,7 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
       const current = prev[role];
       if (!current) return prev;
 
-      const total = current.totalVotes || 100;
+      const total = current.totalVotes || 162;
       const roleCands = candidates.filter(
         (c) => c.post.toLowerCase() === role.toLowerCase()
       );
@@ -481,12 +436,20 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
                   </div>
                 </div>
 
-                {/* Quick Ratio Presets */}
-                {roleCands.length === 2 && (
+                {/* Quick Presets & Reset to 0 */}
+                {roleCands.length >= 2 && (
                   <div className="py-3 flex items-center gap-1.5 border-b border-zinc-100 flex-wrap">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mr-1">
                       Quick:
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => resetRoleToZero(role)}
+                      className="px-2 py-1 rounded-lg text-[10px] font-black bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition-colors"
+                      title="Set all candidates to 0 votes"
+                    >
+                      Reset to 0
+                    </button>
                     <button
                       type="button"
                       onClick={() => applyPreset(role, 0.5)}
@@ -590,7 +553,7 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
                             </div>
                           </div>
 
-                          {/* Interactive Range Slider with Real-time Auto-Balance */}
+                          {/* Interactive Range Slider */}
                           <div className="space-y-1">
                             <input
                               type="range"
@@ -606,16 +569,10 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
                               }
                               className="w-full h-2 bg-zinc-200 rounded-lg appearance-none cursor-pointer accent-[#FF5B26]"
                             />
-                            {roleCands.length === 2 && (
-                              <p className="text-[10px] text-zinc-400 font-medium">
-                                Adjusting this auto-balances{" "}
-                                {
-                                  roleCands.find(
-                                    (c) => c.id !== candidate.id
-                                  )?.name
-                                }
-                              </p>
-                            )}
+                            <p className="text-[10px] text-zinc-400 font-medium flex items-center justify-between">
+                              <span>Allocated independently</span>
+                              <span>Max: {state.totalVotes} votes</span>
+                            </p>
                           </div>
                         </div>
                       );
@@ -624,21 +581,18 @@ export const DummyTallyView: React.FC<DummyTallyViewProps> = ({ candidates }) =>
                 </div>
               </div>
 
-              {/* Card Footer: Balance Validator & Save CTA */}
+              {/* Card Footer: Pool Status & Save CTA */}
               <div className="pt-4 border-t border-zinc-100 space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-500 font-medium">Tally Status:</span>
-                  {isBalanced ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Balanced ({totalAllocated} / {state.totalVotes})
+                  <span className="text-zinc-500 font-medium">Allocated Pool:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-black text-zinc-900">
+                      {totalAllocated} / {state.totalVotes} votes
                     </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      Unbalanced ({totalAllocated} / {state.totalVotes})
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-600">
+                      {Math.max(0, state.totalVotes - totalAllocated)} remaining
                     </span>
-                  )}
+                  </div>
                 </div>
 
                 {state.savedSuccess && (

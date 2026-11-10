@@ -41,6 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
         return "Open Display Screen";
       case "reveal":
         return "Public Reveal Screen";
+      case "class-votes":
+        return "Export Class Analytics";
       default:
         return "+ Add Candidate";
     }

@@ -488,6 +488,42 @@ export async function submitBallot(
   return { success: true };
 }
 
+export interface RawBallot {
+  id: string;
+  voter_id: string;
+  receipt_code: string;
+  president_id?: string | null;
+  secretary_id?: string | null;
+  treasurer_id?: string | null;
+  cast_at?: string;
+}
+
+/**
+ * Fetch all cast ballots from the secure ballots table
+ */
+export async function fetchBallots(): Promise<RawBallot[]> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] fetchBallots: Bypassed database query");
+    return [];
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("ballots")
+      .select("id, voter_id, receipt_code, president_id, secretary_id, treasurer_id, cast_at");
+
+    if (error) {
+      console.error("Error fetching ballots:", error);
+      return [];
+    }
+
+    return (data || []) as RawBallot[];
+  } catch (err) {
+    console.error("Failed to fetch ballots:", err);
+    return [];
+  }
+}
+
 /**
  * Reset all votes to 0 and all voters to unvoted
  */
