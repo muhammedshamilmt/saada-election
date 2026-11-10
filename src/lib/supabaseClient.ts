@@ -11,6 +11,85 @@ const supabaseAnonKey =
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
+ * Check if database operations are enabled.
+ * Controlled by boolean environment flags:
+ * - NEXT_PUBLIC_DB_IS_ENABLE
+ * - NEXT_PUBLIC_DB_ENABLED
+ * - DB_IS_ENABLE
+ * - db_isenble
+ * When set to "false" (or false / 0), database storing / putting is completely bypassed
+ * so sound, voting animations, and UI can be tested safely without altering database state.
+ */
+export function isDbEnabled(): boolean {
+  const envVal =
+    process.env.NEXT_PUBLIC_DB_IS_ENABLE ??
+    process.env.NEXT_PUBLIC_DB_ENABLED ??
+    process.env.DB_IS_ENABLE ??
+    (process.env as Record<string, string | undefined>)["db_isenble"] ??
+    "true";
+
+  if (typeof envVal === "string") {
+    const clean = envVal.trim().toLowerCase();
+    if (clean === "false" || clean === "0" || clean === "no" || clean === "off") {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Built-in sample candidate roster for offline / sound testing mode
+const TEST_FALLBACK_CANDIDATES: Candidate[] = [
+  {
+    id: "test-c1",
+    name: "Fayis PV",
+    post: "President",
+    adNo: "AD-101",
+    className: "D3",
+    tagline: "Dedicated to student progress and welfare.",
+    symbolUrl: "https://api.iconify.design/fluent-emoji-flat:rocket.svg",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80",
+    votes: 0,
+    status: "approved",
+  },
+  {
+    id: "test-c2",
+    name: "S. Muhsin Thangal",
+    post: "President",
+    adNo: "AD-102",
+    className: "D3",
+    tagline: "Empowering students through active leadership.",
+    symbolUrl: "https://api.iconify.design/fluent-emoji-flat:star.svg",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80",
+    votes: 0,
+    status: "approved",
+  },
+  {
+    id: "test-c3",
+    name: "Muhammed Ansif",
+    post: "General Secretary",
+    adNo: "AD-103",
+    className: "D2",
+    tagline: "Transparent and accessible student governance.",
+    symbolUrl: "https://api.iconify.design/fluent-emoji-flat:pen.svg",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80",
+    votes: 0,
+    status: "approved",
+  },
+  {
+    id: "test-c4",
+    name: "Muhammed Sinan P",
+    post: "Treasurer",
+    adNo: "AD-104",
+    className: "DGF",
+    tagline: "Accountability and financial integrity for all unions.",
+    symbolUrl: "https://api.iconify.design/fluent-emoji-flat:abacus.svg",
+    avatarUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=400&auto=format&fit=crop&q=80",
+    votes: 0,
+    status: "approved",
+  },
+];
+
+/**
  * Upload an image file directly to the Supabase Storage "election-assets" bucket
  * and return the public URL.
  */
@@ -18,6 +97,12 @@ export async function uploadImageToSupabase(
   file: File,
   folder: "avatars" | "symbols" = "avatars"
 ): Promise<string> {
+  // If DB is disabled, bypass cloud storage and generate instant local object URL
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] Image upload bypassed, using local object preview");
+    return URL.createObjectURL(file);
+  }
+
   try {
     const fileExt = file.name.split(".").pop();
     const cleanFileName = `${Date.now()}-${Math.random()
@@ -57,8 +142,11 @@ export async function fetchCandidates(): Promise<Candidate[]> {
     .select("*")
     .order("votes", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching candidates:", error);
+  if (error || !data || data.length === 0) {
+    if (!isDbEnabled()) {
+      return TEST_FALLBACK_CANDIDATES;
+    }
+    if (error) console.error("Error fetching candidates:", error);
     return [];
   }
 
@@ -80,6 +168,11 @@ export async function fetchCandidates(): Promise<Candidate[]> {
  * Insert or update a candidate in Supabase
  */
 export async function saveCandidate(candidate: Candidate): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] saveCandidate: Bypassed database write");
+    return true;
+  }
+
   const { error } = await supabase.from("candidates").upsert({
     id: candidate.id,
     name: candidate.name,
@@ -104,6 +197,11 @@ export async function saveCandidate(candidate: Candidate): Promise<boolean> {
  * Update an existing candidate in Supabase
  */
 export async function updateCandidate(candidate: Candidate): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] updateCandidate: Bypassed database update");
+    return true;
+  }
+
   const { error } = await supabase
     .from("candidates")
     .update({
@@ -130,6 +228,11 @@ export async function updateCandidate(candidate: Candidate): Promise<boolean> {
  * Delete a candidate from Supabase
  */
 export async function deleteCandidate(id: string): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] deleteCandidate: Bypassed database delete");
+    return true;
+  }
+
   const { error } = await supabase.from("candidates").delete().eq("id", id);
   if (error) {
     console.error("Error deleting candidate:", error);
@@ -148,7 +251,7 @@ export async function fetchVoters(): Promise<Voter[]> {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching voters:", error);
+    if (isDbEnabled()) console.error("Error fetching voters:", error);
     return [];
   }
 
@@ -166,6 +269,11 @@ export async function fetchVoters(): Promise<Voter[]> {
  * Save a single voter in Supabase
  */
 export async function saveVoter(voter: Voter): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] saveVoter: Bypassed database write");
+    return true;
+  }
+
   const { error } = await supabase.from("voters").upsert({
     id: voter.id,
     ad_no: voter.adNo,
@@ -186,6 +294,11 @@ export async function saveVoter(voter: Voter): Promise<boolean> {
  * Bulk save voters in Supabase
  */
 export async function bulkSaveVoters(voters: Voter[]): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] bulkSaveVoters: Bypassed database write");
+    return true;
+  }
+
   const payload = voters.map((v) => ({
     id: v.id,
     ad_no: v.adNo,
@@ -211,6 +324,11 @@ export async function updateVoterStatus(
   hasVoted: boolean,
   votedAt?: string
 ): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] updateVoterStatus: Bypassed database write");
+    return true;
+  }
+
   const { error } = await supabase
     .from("voters")
     .update({
@@ -230,6 +348,11 @@ export async function updateVoterStatus(
  * Delete a voter from Supabase
  */
 export async function deleteVoter(id: string): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] deleteVoter: Bypassed database delete");
+    return true;
+  }
+
   const { error } = await supabase.from("voters").delete().eq("id", id);
   if (error) {
     console.error("Error deleting voter:", error);
@@ -240,7 +363,8 @@ export async function deleteVoter(id: string): Promise<boolean> {
 
 /**
  * Record a ballot and increment candidate votes
- * Strictly enforces that a voter can only vote ONCE.
+ * Strictly enforces that a voter can only vote ONCE when DB is enabled.
+ * When DB is disabled (test mode), simulates immediate success without storing data in the DB.
  */
 export async function submitBallot(
   voterId: string,
@@ -250,6 +374,14 @@ export async function submitBallot(
   treasurerId?: string,
   allCandidateIds?: string[]
 ): Promise<{ success: boolean; error?: string }> {
+  // If DB is disabled, simulate immediate success without storing anything in Supabase
+  if (!isDbEnabled()) {
+    console.log(
+      `[DB_DISABLED: TEST MODE] submitBallot bypassed database storage. Voter: ${voterId}, Receipt: ${receiptCode}. Zero data stored in DB.`
+    );
+    return { success: true };
+  }
+
   const pollTime = new Date().toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
@@ -360,6 +492,11 @@ export async function submitBallot(
  * Reset all votes to 0 and all voters to unvoted
  */
 export async function resetAllElectionVotes(): Promise<boolean> {
+  if (!isDbEnabled()) {
+    console.log("[DB_DISABLED: TEST MODE] resetAllElectionVotes: Bypassed database reset");
+    return true;
+  }
+
   // Clear ballots
   await supabase.from("ballots").delete().neq("id", "none");
 

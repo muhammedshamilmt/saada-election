@@ -16,7 +16,11 @@ import {
   AlertCircle,
   ExternalLink,
   UserCheck,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
+import confetti from "canvas-confetti";
+import { playEVMLongBuzzer, playEVMClickBeep } from "@/lib/soundEffects";
 import {
   Candidate,
   Voter,
@@ -32,6 +36,7 @@ import {
   fetchVoters,
   submitBallot,
   supabase,
+  isDbEnabled,
 } from "@/lib/supabaseClient";
 
 export const VotingBooth: React.FC = () => {
@@ -130,6 +135,7 @@ export const VotingBooth: React.FC = () => {
   const [hasAgreed, setHasAgreed] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [receiptCode, setReceiptCode] = useState<string>("");
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
   const currentRoleIndex = step - 1;
   const currentPostName = contestedPosts[currentRoleIndex] || "";
@@ -152,11 +158,22 @@ export const VotingBooth: React.FC = () => {
       return;
     }
 
-    const voterFound = voters.find(
+    let voterFound = voters.find(
       (v) =>
         v.adNo.toUpperCase() === trimmedAdNo &&
         v.className.toUpperCase() === classInput.toUpperCase()
     );
+
+    // When DB is disabled for sound testing, auto-generate a test voter session if not registered
+    if (!voterFound && !isDbEnabled()) {
+      voterFound = {
+        id: `test-voter-${trimmedAdNo || "DEMO"}`,
+        name: `Test Student (${trimmedAdNo || "DEMO"})`,
+        adNo: trimmedAdNo || "TEST-01",
+        className: classInput,
+        hasVoted: false,
+      };
+    }
 
     if (!voterFound) {
       setAuthError(
@@ -165,7 +182,8 @@ export const VotingBooth: React.FC = () => {
       return;
     }
 
-    if (voterFound.hasVoted) {
+    // Only block duplicate voting when DB is actively enabled
+    if (voterFound.hasVoted && isDbEnabled()) {
       setAuthError(
         `Voter "${voterFound.name}" (${voterFound.adNo}) has ALREADY cast their ballot at ${voterFound.votedAt || "earlier today"
         }. Strictly 1 voting session is permitted per student.`
@@ -190,6 +208,11 @@ export const VotingBooth: React.FC = () => {
     }
 
     setIsSubmitting(true);
+
+    // Play authentic EVM confirmation long beep buzzer
+    if (soundEnabled) {
+      playEVMLongBuzzer(1.5);
+    }
 
     try {
       const pollTime = new Date().toLocaleTimeString([], {
@@ -236,6 +259,17 @@ export const VotingBooth: React.FC = () => {
 
       setReceiptCode(generatedCode);
       setStep(successStep); // Show success receipt
+
+      // Trigger celebration confetti
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 80,
+          origin: { y: 0.6 },
+        });
+      } catch {
+        // Safe fallback if canvas is unavailable
+      }
     } catch (err) {
       console.error("Failed to submit ballot to Supabase:", err);
       alert("Submission error: Unable to record ballot. Please contact the election desk.");
@@ -270,6 +304,11 @@ export const VotingBooth: React.FC = () => {
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   Booths Active
                 </span>
+                {!isDbEnabled() && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                    Sound Test (DB Offline)
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-zinc-400 font-medium hidden sm:block">
                 Students Union Election 2026 &bull; Digital Democracy Booth
@@ -277,7 +316,37 @@ export const VotingBooth: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Audio EVM Beep Sound Option Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = !soundEnabled;
+                setSoundEnabled(next);
+                if (next) playEVMClickBeep();
+              }}
+              title={soundEnabled ? "Mute EVM Confirmation Beep Buzzer" : "Turn On EVM Confirmation Beep Buzzer"}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                soundEnabled
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200/90 hover:bg-emerald-100"
+                  : "bg-zinc-100 text-zinc-500 border-zinc-200 hover:bg-zinc-200/60"
+              }`}
+            >
+              {soundEnabled ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="hidden sm:inline">EVM Beep:</span>
+                  <span className="font-extrabold text-emerald-700">ON</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="hidden sm:inline">EVM Beep:</span>
+                  <span className="font-medium text-zinc-500">MUTED</span>
+                </>
+              )}
+            </button>
+
             {activeVoter && step >= 1 && step <= reviewStep && (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 border border-zinc-200/80 text-xs">
                 <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -462,6 +531,9 @@ export const VotingBooth: React.FC = () => {
                   const isSelected = currentSelectedCandidateId === candidate.id;
 
                   const handleCardClick = () => {
+                    if (soundEnabled) {
+                      playEVMClickBeep();
+                    }
                     setSelectedBallots((prev) => ({
                       ...prev,
                       [currentPostName]: candidate.id,
@@ -812,7 +884,16 @@ export const VotingBooth: React.FC = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-center pt-2">
+            <div className="flex items-center justify-center gap-3 pt-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => playEVMLongBuzzer(1.4)}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-700 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <Volume2 className="w-4 h-4 text-emerald-600" />
+                <span>Replay EVM Buzzer Beep</span>
+              </button>
+
               <button
                 onClick={handleResetForNewVoter}
                 className="w-full sm:w-auto px-8 py-3 rounded-xl bg-[#FF5B26] hover:bg-[#e04815] text-white text-sm font-bold shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"

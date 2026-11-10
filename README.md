@@ -98,6 +98,10 @@ Create a `.env.local` file in the project root:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
+# Database Enable Switch (true for live election / false to test sound & UI without storing data in DB)
+NEXT_PUBLIC_DB_IS_ENABLE=false
+DB_IS_ENABLE=false
+
 # Admin Authentication
 ADMIN_EMAIL=admin@domain.com
 ADMIN_PASSWORD=your-secure-password
